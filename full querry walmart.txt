@@ -1,6 +1,6 @@
-Need columns for time of day, day , and month to help answer a lot of the questions
+--Need columns for time of day, day , and month to help answer a lot of the questions--
 
-STEP 1 create a column for time of day and update it with data.
+--STEP 1 create a column for time of day and update it with data.--
 
 ALTER TABLE dbo.WalmartSalesData#csv$
 ADD time_of_day VARCHAR(10);
@@ -12,7 +12,7 @@ SET time_of_day = (CASE
 		  ELSE 'evening'
 		  END)
 
-STEP 2 create a column for  day and update it with data.
+--STEP 2 create a column for  day and update it with data.--
 
 ALTER TABLE dbo.walmartsalesdata#csv$
 ADD day_name varchar(10);
@@ -21,12 +21,268 @@ ADD day_name varchar(10);
 UPDATE dbo.WalmartSalesData#csv$
 SET day_name = DATENAME(WEEKDAY, date);
 
-STEP 3 create a column for month and update it with data
+--STEP 3 create a column for month and update it with data--
 
 ALTER TABLE dbo.walmartsalesdata#csv$
 ADD month_name varchar(10);
 
 UPDATE dbo.WalmartSalesData#csv$
 SET month_name = DATENAME(MONTH, date);
+
+
+--------------------------EXPLORATORY ANALYSIS----------------------------------------
+----------------------------GENERIC QUESTIONS-----------------------------------
+-------------1 how may cities are in data-----------------------------
+
+SELECT DISTINCT city
+FROM dbo.walmartsalesdata#csv$;
+
+----------------Ans: There are 3 diffrent cities in the data
+
+-------------2 how many distinct branches -------------------------
+
+SELECT DISTINCT Branch
+FROM dbo.WalmartSalesData#csv$;
+
+-----------------Ans: There are 3 distinct branches-----------------
+
+--------------3 in which cities are the branches located---------------
+
+SELECT DISTINCT 
+city,
+branch
+FROM dbo.WalmartSalesData#csv$;
+
+----------------Ans: Yangon is A, Mandalay is B, Naypyitaw is C------------------
+
+------------------------PRODUCT QUESTIONS---------------------------------------------
+-------------------1 how many unigue product lines are in the data---------------
+
+SELECT COUNT(DISTINCT product_line) AS #Product_lines
+FROM dbo.walmartsalesdata#csv$;
+
+----------------Ans: 6 different product lines-----------------------------
+
+------------------2 What is the most common payment method-------------------
+
+SELECT Payment,
+      COUNT(payment) AS #Payment
+FROM dbo.WalmartSalesData#csv$
+GROUP BY payment
+ORDER BY COUNT(payment) DESC;
+
+----------------Ans: Ewallet with 345 count--------------------
+
+--------------------3 What is the most selling product line-----------------
+
+SELECT product_line,
+       COUNT(invoice_id) AS #
+FROM dbo.WalmartSalesData#csv$
+GROUP BY Product_line
+ORDER BY COUNT(invoice_id) DESC;
+
+----------------Ans: Fashion accessories with 178 count-----------------------
+
+-----------------4 what is the total revenue by month------------------------
+SELECT month_name AS month,
+       SUM(total) AS total_revenue
+FROM dbo.WalmartSalesData#csv$
+GROUP BY month_name
+ORDER BY SUM(total) DESC;
+
+---------------Ans:  JAN; 116291, MAR; 109455, FEB; 97219---------------------------
+
+---------------5 Which Month had the largest COGS------------------------
+
+SELECT month_name AS Month,
+       SUM(cogs) AS cogs
+FROM dbo.WalmartSalesData#csv$
+GROUP BY month_name
+ORDER BY cogs DESC;
+
+-----------------Ans: January--------------------------
+
+-----------------6 What product line had the largest revenue-------------
+
+SELECT product_line,
+       SUM(total) AS revenue
+FROM dbo.WalmartSalesData#csv$
+GROUP by Product_line
+ORDER BY SUM(total) DESC;
+
+------------------Ans Food and beverages--------------
+
+------------7 Which City Had the most Revenue--------------------
+
+SELECT city,
+       SUM(total) AS revenue
+FROM dbo.WalmartSalesData#csv$
+GROUP by City
+ORDER BY SUM(total) DESC;
+
+-------------------Ans: Naypyitaw-----------------------------
+
+----------------------8 which procuct had the largest average VAT-----------
+
+SELECT product_line,
+       AVG(tax) AS Vat
+FROM dbo.WalmartSalesData#csv$
+GROUP BY Product_line
+ORDER BY AVG(tax) DESC;
+
+----------------Ans: Home and Lifestyle----------------------
+
+----------------9 which branch sold more products that the average sold----------------
+
+SELECT branch,
+       SUM(quantity) AS qty
+FROM dbo.WalmartSalesData#csv$
+GROUP BY branch
+HAVING SUM(quantity) > (SELECT AVG(Quantity) FROM dbo.WalmartSalesData#csv$);
+
+-------------Ans: Branch A-------------------------------------
+
+-----------------10 what is the most common product line by gender-----------------
+
+SELECT gender,
+       product_line,
+       COUNT(gender) AS cnt
+FROM dbo.walmartsalesdata#csv$
+GROUP BY gender, Product_line
+ORDER BY COUNT(gender) DESC;
+
+-------------Ans: Female = Fashion and accessories, Male = Health and Beauty-----------
+
+-------------11 what is the average rating of each product line----------------------
+
+SELECT product_line,
+       ROUND(AVG(Rating), 2) AS average_rating
+FROM dbo.WalmartSalesData#csv$
+GROUP BY Product_line
+ORDER BY AVG(Rating) DESC;
+
+-------------------Answered-----------------------------
+
+-------------------------------SALES QUESTIONS-------------------------------------
+---------Q. whats the number of sales made in each time of day per week day--------
+
+SELECT day_name,
+       time_of_day,
+	   COUNT(time_of_day) AS sales_per_time
+FROM dbo.WalmartSalesData#csv$
+GROUP BY day_name, time_of_day
+ORDER BY time_of_day;
+
+--------Q. which of the customer types brings the most revenue-----------------
+
+SELECT customer_type,
+       SUM(total) AS total_revenue
+FROM WalmartSalesData#csv$
+GROUP BY Customer_type
+ORDER BY SUM(total) DESC;
+
+---------Q. which city has largest VAT----------------------------
+
+SELECT city,
+       AVG(tax) AS avg_VAT
+FROM dbo.WalmartSalesData#csv$
+GROUP BY City
+ORDER BY AVG(tax) DESC;
+
+-----------OR--------------
+
+SELECT city,
+       SUM(tax) AS total_VAT
+FROM dbo.WalmartSalesData#csv$
+GROUP BY City
+ORDER BY SUM(tax) DESC
+
+------Q. which cuatomer type has largest VAT-------------------
+
+SELECT Customer_type,
+       AVG(tax) AS avg_VAT
+FROM dbo.WalmartSalesData#csv$
+GROUP BY Customer_type
+ORDER BY AVG(tax) DESC;
+
+-----------------CUSTOMER QUESTIONS--------------------------------------
+-------Q. how many unique customer types are in the dataset----------------------
+
+SELECT DISTINCT customer_type
+FROM dbo.WalmartSalesData#csv$;
+
+-------Q. how many unique paymet types does the data have------------------------
+SELECT DISTINCT payment
+FROM dbo.WalmartSalesData#csv$;
+
+-------Q. what is the most common customer type------------------------------
+
+SELECT customer_type,
+       COUNT(customer_type) AS #customers
+FROM dbo.WalmartSalesData#csv$
+GROUP BY Customer_type
+ORDER BY COUNT(customer_type) DESC;
+
+--------Q. what is the gender with the  most customers-------------
+
+SELECT gender,
+       COUNT(*) AS gender_count
+FROM dbo.WalmartSalesData#csv$
+GROUP BY Gender;
+
+--------Q. What is the gender distribution per branch------------------
+
+SELECT branch,
+       gender,
+	   COUNT(gender) AS dist
+FROM dbo.WalmartSalesData#csv$
+GROUP BY Branch, Gender
+ORDER BY branch;
+
+-------Q. what time of day do customers give the most rating---------
+
+SELECT time_of_day,
+       AVG(rating) AS rating_avg
+FROM dbo.WalmartSalesData#csv$
+GROUP BY time_of_day
+ORDER BY AVG(rating) DESC; 
+
+-------Q. what time of day do customers give the most rating per branch---------
+
+SELECT time_of_day,
+       branch,
+       ROUND(AVG(rating), 1) AS rating_avg
+FROM dbo.WalmartSalesData#csv$
+GROUP BY time_of_day,Branch
+ORDER BY branch, AVG(rating) DESC; 
+
+---------Q. which day of the week has the best average rating--------------------
+
+SELECT day_name,
+       ROUND(AVG(rating), 1) AS rating_avg
+FROM dbo.WalmartSalesData#csv$
+GROUP BY day_name
+ORDER BY AVG(rating) DESC;
+
+---------Q. which day of the week has the best average rating per branch--------------------
+
+SELECT day_name,
+       branch,
+       ROUND(AVG(rating), 1) AS rating_avg
+FROM dbo.WalmartSalesData#csv$
+GROUP BY day_name, Branch
+ORDER BY branch, AVG(rating) DESC;
+
+-----------------OR---------------------------------
+
+SELECT day_name,
+       ROUND(AVG(rating), 1) AS rating_avg
+FROM dbo.WalmartSalesData#csv$
+WHERE Branch = 'A'
+GROUP BY day_name
+ORDER BY AVG(rating) DESC;
+--- change the branch name to get data from only that branch.
+
+
 
 
