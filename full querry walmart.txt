@@ -1,3 +1,4 @@
+-----------------------DATA CLEANING------------------------------
 --Need columns for time of day, day , and month to help answer a lot of the questions--
 
 --STEP 1 create a column for time of day and update it with data.--
