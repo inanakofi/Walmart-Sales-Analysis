@@ -1,0 +1,32 @@
+Need columns for time of day, day , and month to help answer a lot of the questions
+
+STEP 1 create a column for time of day and update it with data.
+
+ALTER TABLE dbo.WalmartSalesData#csv$
+ADD time_of_day VARCHAR(10);
+
+UPDATE dbo.WalmartSalesData#csv$
+SET time_of_day = (CASE
+	      WHEN time BETWEEN '00:00:00' AND '12:00:00' THEN 'morning'
+	      WHEN time BETWEEN '12:00:00' AND '16:00:00' THEN 'aftenoon'
+		  ELSE 'evening'
+		  END)
+
+STEP 2 create a column for  day and update it with data.
+
+ALTER TABLE dbo.walmartsalesdata#csv$
+ADD day_name varchar(10);
+
+
+UPDATE dbo.WalmartSalesData#csv$
+SET day_name = DATENAME(WEEKDAY, date);
+
+STEP 3 create a column for month and update it with data
+
+ALTER TABLE dbo.walmartsalesdata#csv$
+ADD month_name varchar(10);
+
+UPDATE dbo.WalmartSalesData#csv$
+SET month_name = DATENAME(MONTH, date);
+
+
